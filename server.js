@@ -66,6 +66,17 @@ projectRoute.get('/:name', function(req, res){
 		res.sendStatus(400);
 });
 
+/* Alternate way to define a route. Notice we can chain the methods. */
+app.route('/login')
+	/* process GET request on http://localhost:4000/login */
+	.get(function(req, res){
+		res.send("This is login GET request");
+	})
+	/* process POST request on http://localhost:4000/login */
+	.post(function(req, res){
+		res.send("This is login POST request");	
+	});
+
 //Add the routes to the application
 app.use('/',homeRoute);
 app.use('/admin', adminRoute);
