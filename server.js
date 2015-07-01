@@ -35,17 +35,22 @@ adminRoute.use(function(req, res, next) {
 		res.redirect('/admin');
 });
 
-userRoute.use(function(req, res, next) {
-	if (req.path === '/')
-		res.send("You have reached users's page");
-	else if (req.path === '/projects')
-		res.send("You have reached the users's projects page");
-	else
-		res.redirect('/user');
+userRoute.get('/', function(req, res){
+	res.send("list of users");
 });
 
+userRoute.get('/:id', function(req, res){
+	var uid = req.params.id;
+	var regex = /^[0-9]*$/;
+	if (regex.test(uid))
+		res.send("You have reached User ID:" + uid + " page");
+	else
+		res.sendStatus(400);
+});
+
+
 projectRoute.get('/', function(req, res){
-	res.sendStatus(404);
+	res.send("list of projects");
 });
 
 projectRoute.get('/:name', function(req, res){
@@ -60,8 +65,8 @@ projectRoute.get('/:name', function(req, res){
 //Add the routes to the application
 app.use('/', homeRoute);
 app.use('/admin', adminRoute);
-app.use('/user', userRoute);
-app.use('/project', projectRoute);
+app.use('/users', userRoute);
+app.use('/projects', projectRoute);
 
 app.listen(4000);
 console.log('Server running on port 4000');
