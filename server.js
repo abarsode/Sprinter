@@ -3,6 +3,25 @@ var express = require('express');
 
 //Created a express applicatiom
 var app = express();
+var bodyParser = require('body-parser');
+var morgan = require('morgan');
+var mongoose = require('mongoose');
+
+// APP CONFIGURATION 
+// use body parser so we can grab information from POST requests
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// configure our app to handle CORS requests
+app.use(function(req, res, next) {
+	res.setHeader('Access-Control-Allow-Origin', '*');
+   	res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+   	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, \
+ 		Authorization');
+   	next();
+ });
+
+app.use(morgan('sprinter'));
 
 //Define our routes here.
 var homeRoute = express.Router();
@@ -36,7 +55,7 @@ adminRoute.use(function(req, res, next) {
 });
 
 userRoute.get('/', function(req, res){
-	res.send("list of users");
+	res.json({message:"list of users"});
 });
 
 userRoute.get('/:id', function(req, res){
