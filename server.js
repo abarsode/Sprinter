@@ -21,7 +21,13 @@ app.use(function(req, res, next) {
    	next();
  });
 
-app.use(morgan('sprinter'));
+//Use morgan for logging
+app.use(morgan('dev'));
+//Connect to the local mongoDB database 'sprinter'
+mongoose.connect('mongodb://localhost:27017/sprinter');
+
+//Import the user scheme
+var User = require('./models/user');
 
 //Define our routes here.
 var homeRoute = express.Router();
@@ -54,11 +60,36 @@ adminRoute.use(function(req, res, next) {
 		res.redirect('/admin');
 });
 
-userRoute.get('/', function(req, res){
-	res.json({message:"list of users"});
+userRoute.get('/', function(req, res) {
+	User.find(function(err, doc) {
+		if (err)
+			res.send(err);
+		else
+			res.json(doc);
+	});
 });
 
-userRoute.get('/:id', function(req, res){
+userRoute.post('/', function(req, res) {
+	var user = new User();
+
+	user.name = req.body.name;
+	user.username = req.body.username;
+	user.password = req.body.password;
+	user.isadmin = req.body.isadmin;
+	console.log("user is:" + user.toString());
+	user.save(function(err) {
+		if (err) {			
+			if (err.code == 11000)
+				return res.json({success: false, message: "Username alredy exists"});
+			else
+				return res.send(err);
+		}
+		res.json({sucess:true, message: "User created successfully!"});	
+	});
+
+});
+
+userRoute.get('/:id', function(req, res) {
 	var uid = req.params.id;
 	var regex = /^[0-9]*$/;
 	if (regex.test(uid))
