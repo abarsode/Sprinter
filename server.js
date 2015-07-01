@@ -10,47 +10,38 @@ var adminRoute = express.Router();
 var userRoute = express.Router();
 var projectRoute = express.Router();
 
-// Add Route middleware. This will be invoked before each call
-// to the home route. This is useful in intercepting the requests
-// and processing the request before the route.
+/* Add Route middleware. Process the routes here.
+ Advantage here is we can ignore/redirect all other
+ requests. '/', '/login', '/about' are valid routes, for
+ all other routes - redirect to homepage. */
 
-homeRoute.use(function(req, res, next){
-	console.log("HOME-METHOD:" + req.method + " URL:" + req.url);
-	next();
+homeRoute.use(function(req, res, next) {
+	if (req.path === '/')
+		res.send("You have reached the home page");
+	if (req.path === '/login' && req.method === 'GET')
+		res.send("You have reached the login page");
+	if (req.path === '/about')
+		res.send("You have reached the about page");
+
+	next();	
 });
 
-adminRoute.use(function(req, res, next){
-	console.log("ADMIN-METHOD:" + req.method + " URL:" + req.url);
-	next();
+adminRoute.use(function(req, res, next) {
+	if (req.path === '/')
+		res.send("You have reached Admin's page");
+	else if (req.path === '/projects')
+		res.send("You have reached the Admin's projects page");
+	else
+		res.redirect('/admin');
 });
 
-//Setup the routes
-homeRoute.get('/', function(req, res){
-	res.send("You have reached the home page");
-});
-
-homeRoute.get('/login', function(req, res){
-	res.send("You have reached the login page");
-});
-
-homeRoute.get('/about', function(req, res){
-	res.send("You have reached the About page");
-});
-
-adminRoute.get('/', function(req, res){
-	res.send("You have reached admin page");
-});
-
-adminRoute.get('/projects', function(req, res){
-	res.send("You have reached admin's Projects page");
-});
-
-userRoute.get('/', function(req, res){
-	res.send("You have reached user page");
-});
-
-userRoute.get('/projects', function(req, res){
-	res.send("You have reached user's Projects page");
+userRoute.use(function(req, res, next) {
+	if (req.path === '/')
+		res.send("You have reached users's page");
+	else if (req.path === '/projects')
+		res.send("You have reached the users's projects page");
+	else
+		res.redirect('/user');
 });
 
 projectRoute.get('/', function(req, res){
@@ -66,19 +57,8 @@ projectRoute.get('/:name', function(req, res){
 		res.sendStatus(400);
 });
 
-/* Alternate way to define a route. Notice we can chain the methods. */
-app.route('/login')
-	/* process GET request on http://localhost:4000/login */
-	.get(function(req, res){
-		res.send("This is login GET request");
-	})
-	/* process POST request on http://localhost:4000/login */
-	.post(function(req, res){
-		res.send("This is login POST request");	
-	});
-
 //Add the routes to the application
-app.use('/',homeRoute);
+app.use('/', homeRoute);
 app.use('/admin', adminRoute);
 app.use('/user', userRoute);
 app.use('/project', projectRoute);
