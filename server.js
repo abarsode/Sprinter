@@ -91,13 +91,35 @@ userRoute.post('/', function(req, res) {
 
 userRoute.get('/:id', function(req, res) {
 	var uid = req.params.id;
-	var regex = /^[0-9]*$/;
-	if (regex.test(uid))
-		res.send("You have reached User ID:" + uid + " page");
-	else
+	var regex = /^[0-9a-z]*$/;
+	if (!regex.test(uid)) {
 		res.sendStatus(400);
+		return;
+	}
+
+	User.findById(uid, function(err, user){
+		if (err)
+			res.send(err);
+		else
+			res.json(user);
+	});
 });
 
+userRoute.delete('/:id', function(req, res) {
+	var uid = req.params.id;
+	var regex = /^[0-9a-z]*$/;
+	if (!regex.test(uid)) {
+		res.sendStatus(400);
+		return;	
+	}
+
+	User.remove({_id: uid}, function(err, user){
+		if (err)
+			res.send(err);
+		else
+			res.json({message: "successfully deleted:" + user.name});
+	});
+});
 
 projectRoute.get('/', function(req, res){
 	res.send("list of projects");
