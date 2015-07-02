@@ -6,11 +6,14 @@ var app = express();
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
 var mongoose = require('mongoose');
+var jwt = require('jsonwebtoken');
+
 
 // APP CONFIGURATION 
 // use body parser so we can grab information from POST requests
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+var secret = 'Thisisaverylongsecret';
 
 // configure our app to handle CORS requests
 app.use(function(req, res, next) {
@@ -31,6 +34,7 @@ var User = require('./models/user');
 
 //Define our routes here.
 var homeRoute = express.Router();
+var loginRoute = express.Router();
 var adminRoute = express.Router();
 var userRoute = express.Router();
 var projectRoute = express.Router();
@@ -43,12 +47,46 @@ var projectRoute = express.Router();
 homeRoute.use(function(req, res, next) {
 	if (req.path === '/')
 		res.send("You have reached the home page");
-	if (req.path === '/login' && req.method === 'GET')
-		res.send("You have reached the login page");
 	if (req.path === '/about')
 		res.send("You have reached the about page");
 
 	next();	
+});
+
+loginRoute.use(function(req, res, next) {
+	if (req.method === 'GET') {
+		res.send("You have reached the login page.Post your credentials");
+		return;
+	}
+	if (req.method === 'POST') {
+		var _username = req.body.username;
+		var _password = req.body.password;
+
+		//Explicitly select username and password
+		User.findOne({username: _username})
+		.select('name username password').exec(function(err, user) {
+			if (err)
+				return res.send(err);
+
+			if(!user)
+				return res.json({success:false, message: "Auth failed, user not found"});
+
+			if (user) {
+				var _valid = user.comparePassword(_password);
+				if(!_valid) {
+					res.json({success:false, message: "Wrong password"});
+				} else {
+					var token = jwt.sign({
+           							name: user.name,
+           							username: user.username
+         						}, secret, {
+           						expiresInMinutes: 1440 // expires in 24 hours
+         						});
+					res.json({success:true, message:"token!", token:token});
+				}
+			}
+		});
+	}
 });
 
 adminRoute.use(function(req, res, next) {
@@ -61,6 +99,16 @@ adminRoute.use(function(req, res, next) {
 });
 
 userRoute.get('/', function(req, res) {
+	var token = req.body.token || req.params.token || req.headers['x-access-token'];
+	if (!token){
+		return res.sendStatus(401);
+	} else {
+		var valid = jwt.verify(token, secret, function(err, decoded){
+			if (err)
+				return res.status(403).send({success:false, message:"Invalid token"});
+		});
+	}
+
 	User.find(function(err, doc) {
 		if (err)
 			res.send(err);
@@ -164,6 +212,7 @@ projectRoute.get('/:name', function(req, res){
 
 //Add the routes to the application
 app.use('/', homeRoute);
+app.use('/login', loginRoute);
 app.use('/admin', adminRoute);
 app.use('/users', userRoute);
 app.use('/projects', projectRoute);
