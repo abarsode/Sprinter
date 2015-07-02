@@ -121,6 +121,34 @@ userRoute.delete('/:id', function(req, res) {
 	});
 });
 
+userRoute.put('/:id', function(req, res) {
+	var uid = req.params.id;
+	var regex = /^[0-9a-z]*$/;
+	if (!regex.test(uid)) {
+		res.sendStatus(400);
+		return;	
+	}
+
+	User.findById(uid, function(err, user){
+		if (err)
+			res.send(err);
+		else {
+			if (req.body.name)
+				user.name = req.body.name;
+			if (req.body.usernameme)
+				user.username = req.body.username;
+			if (req.body.password)
+				user.password = req.body.password;
+			user.save(function(err){
+				if (err)
+					res.send(err);
+				else
+					res.json({message: "User updated!"});		
+			});
+		}
+	});	
+});
+
 projectRoute.get('/', function(req, res){
 	res.send("list of projects");
 });
